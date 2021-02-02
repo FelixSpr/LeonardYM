@@ -25,7 +25,7 @@ leonardYM: $(OBJECTS)
 include Makefile.list.mk
 
 clean:
-	-rm ./build/*.exe
-	-rm ./build/*.o
+	-rm -f ./build/*.exe
+	-rm -f ./build/*.o
 
 
