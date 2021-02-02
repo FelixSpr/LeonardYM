@@ -1,0 +1,5 @@
+*.o
+*.sw[op]
+build
+extra_libs/eigen-*
+extra_libs/Eigen
