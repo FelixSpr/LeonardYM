@@ -16,7 +16,7 @@ CPPFLAGS = $(OPTIMIZE) $(INC) -DMBE="\"$(PWD)/source/utils/MatrixBaseExtension.h
 include Makefile.obj.mk
 
 all: leonardYM
-	$(CPP) $(CPPFLAGS) $(OBJECTS) -o ./build/leonardYM.exe -lboost_program_options
+	$(CPP) $(CPPFLAGS) $(OBJECTS) -o ./build/leonardYM.exe -L/opt/gridware/depots/e2b91392/el7/pkg/libs/boost/1.60.0/gcc-5.5.0+openmpi-1.10.7+python-2.7.8/lib -lboost_program_options
 	@echo "Compiled with NUMCOLORS: " $(nc)
 
 leonardYM: $(OBJECTS)
@@ -25,7 +25,5 @@ leonardYM: $(OBJECTS)
 include Makefile.list.mk
 
 clean:
-	-rm ./build/*.o
-	-rm ./build/*.exe
-
-
+	-rm -f ./build/*.o
+	-rm -f ./build/*.exe
