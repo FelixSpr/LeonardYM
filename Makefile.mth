@@ -9,7 +9,7 @@ endif
 CC       = gcc
 CPP      = g++
 OPTIMIZE = -O2 -Wno-unused-local-typedefs -Wall -Wextra -std=c++11 -fopenmp
-INC	= -I./extra_libs/Eigen -I./extra_libs/ -I./source/
+INC	= -I./extra_libs/Eigen -I./extra_libs/ -I./source/ -I/opt/gridware/depots/e2b91392/el7/pkg/libs/boost/1.60.0/gcc-5.5.0+openmpi-1.10.7+python-2.7.8/include/
 CFLAGS   = $(OPTIMIZE) $(INC)
 CPPFLAGS = $(OPTIMIZE) $(INC) -DMBE="\"$(PWD)/source/utils/MatrixBaseExtension.h\"" -DNUMCOLORS=$(nc) $(adj) -DEIGEN -DMULTITHREADING
 
