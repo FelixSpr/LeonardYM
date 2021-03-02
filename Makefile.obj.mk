@@ -18,7 +18,7 @@ OBJECTS  = ./build/ReducedStencil.o ./build/StandardStencil.o ./build/ExtendedSt
 			./build/GlobalOutput.o ./build/OutputSweep.o \
 			./build/FermionForce.o ./build/DiracWilsonFermionForce.o ./build/BlockDiracWilsonFermionForce.o ./build/ImprovedFermionForce.o ./build/TestForce.o ./build/SmearingForce.o ./build/OverlapFermionForce.o \
 			./build/StochasticEstimator.o ./build/MesonCorrelator.o ./build/ChiralCondensate.o ./build/SingletOperators.o ./build/GluinoGlue.o ./build/NPRVertex.o ./build/XSpaceCorrelators.o ./build/OverlapChiralRotation.o \
-			./build/PureGaugeUpdater.o ./build/PureGaugeOverrelaxation.o ./build/PureGaugeHMCUpdater.o ./build/Checkerboard.o ./build/PureGaugeWilsonLoops.o \
+			./build/PureGaugeUpdater.o ./build/PureGaugeUpdaterConst.o ./build/PureGaugeOverrelaxation.o ./build/PureGaugeHMCUpdater.o ./build/Checkerboard.o ./build/PureGaugeWilsonLoops.o \
 			./build/TwoFlavorFermionAction.o ./build/TwoFlavorQCDAction.o ./build/TwoFlavorHMCUpdater.o \
 			./build/NFlavorFermionAction.o ./build/NFlavorQCDAction.o ./build/MultiStepNFlavorUpdater.o \
 			./build/DiracEigenSolver.o ./build/Eigenvalues.o \

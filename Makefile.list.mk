@@ -213,6 +213,9 @@
 
 ./build/PureGaugeUpdater.o: ./source/pure_gauge/PureGaugeUpdater.h ./source/pure_gauge/PureGaugeUpdater.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeUpdater.o ./source/pure_gauge/PureGaugeUpdater.cpp
+ 
+./build/PureGaugeUpdaterConst.o: ./source/pure_gauge/PureGaugeUpdaterConst.h ./source/pure_gauge/PureGaugeUpdaterConst.cpp
+	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeUpdaterConst.o ./source/pure_gauge/PureGaugeUpdaterConst.cpp
 
 ./build/PureGaugeOverrelaxation.o: ./source/pure_gauge/PureGaugeOverrelaxation.h ./source/pure_gauge/PureGaugeOverrelaxation.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeOverrelaxation.o ./source/pure_gauge/PureGaugeOverrelaxation.cpp

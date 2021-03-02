@@ -15,6 +15,17 @@
 #include <iostream>
 #include <fenv.h>
 
+//#include "actions/GaugeEnergy.h"
+#include "actions/GaugeAction.h"
+
+//added by Felix
+/*
+#include "actions/GaugeEnergy.h"
+#include "actions/GaugeAction.h"
+void findEintsmooth(double Eint, double delta);
+*/
+//up to here
+
 int Update::RandomSeed::counter = -1;
 boost::mt19937 Update::RandomSeed::rng;
 boost::uniform_int<> Update::RandomSeed::dist = boost::uniform_int<>(-10000000,10000000);
@@ -305,7 +316,10 @@ int main(int ac, char* av[]) {
 	simulation.warmUp();
 	//Perform the measurements
 	simulation.measurement();
-
+  Update::GaugeAction* gaugeActionEfind = Update::GaugeAction::getInstance("StandardWilson",5.6);
+	Update::long_real_t energyEfind = gaugeActionEfind->energy(*environment);
+  double energyout = energyEfind;
+  std::cout << "Gaugeaction " << energyout << std::endl;
 	//Print and finalize the output to file
 	output->print();
 	output->destroy();
@@ -324,4 +338,52 @@ int main(int ac, char* av[]) {
 	return 0;
 }
 
-
+/*
+void findEintsmooth(double Eint, double delta) {
+  bool Efound = false;
+  double energy;
+  double energyref;
+  double betaEfind = environment.configurations.get<double>("beta");
+  double betaref = environment.configurations.get<double>("beta");
+  GaugeAction* gaugeActionEfind = GaugeAction::getInstance("StandardWilson",betaEfind);
+	long_real_t energyEfind = gaugeActionEfind->energy(environment);
+  int counter = 0;
+  std::cout << "GaugeEnergy::Energy value " << energyEfind << std::endl;
+  if(energyEfind>=Eint && energyEfind <= (Eint+delta))
+  {
+    Efound = true;
+    betaEfind = betaref;
+  }
+  
+  while(Efound == false && counter<400)
+  {
+    update();
+    //energy = action();
+    energyref = actionref(betaref);
+    //node0_printf("energy %.8g %.8g %.8g\n",
+      //           energyref, beta, counter);
+    //node0_printf("Eint = %.4g \n", Eint);
+    //node0_printf("energy %.8g %.8g %.8g\n", energy, Eint, counter);
+    //node0_printf("energyref %.8g %.8g %.8g\n", energyref, beta, counter);
+    if(energyref>=Eint && energyref <= (Eint+delta))
+    {
+      Efound = true;
+      beta = betaref;
+      node0_printf("energyref %.8g %.8g %d\n", energyref, beta, counter);
+    }
+    else if(energyref>(Eint+delta))
+    {
+      beta = beta+0.1;
+      node0_printf("Beta and counter %.8g %.8g \n",  beta, counter*1.0);
+    }
+    else if(energyref<=(Eint+delta))
+    {
+      beta = beta-0.1;
+      node0_printf("Beta and counter %.8g %.8g \n",  beta, counter*1.0);
+    }
+    counter = counter +1;
+  }
+  node0_printf("counter = %.8g \n", counter*1.0);
+  beta = betaref;
+}
+*/
