@@ -1,5 +1,6 @@
 #include "LatticeSweep.h"
 #include "pure_gauge/PureGaugeUpdater.h"
+#include "pure_gauge/PureGaugeUpdaterConst.h" //FELIX
 #include "wilson_loops/Plaquette.h"
 #include "utils/FromString.h"
 #include "hmc_updaters/PureGaugeHMCUpdater.h"
@@ -54,6 +55,8 @@ LatticeSweep* LatticeSweep::getInstance(const std::string& name) {
 	//Factory for the Lattice sweep
 	if (name == "PureGaugeCM") {
 		return new PureGaugeUpdater();
+	} else if (name == "PureGaugeCMConst") {
+		return new PureGaugeUpdaterConst();
 	} else if (name == "Plaquette") {
 		return new Plaquette();
 	} else if (name == "PureGaugeHMC") {
@@ -212,6 +215,7 @@ void LatticeSweep::setSweepToJump(unsigned int _sweepToJump) {
 
 void LatticeSweep::addParameters(po::options_description& desc) {
 	PureGaugeUpdater::registerParameters(desc);
+  PureGaugeUpdaterConst::registerParameters(desc);
 	Plaquette::registerParameters(desc);
 	PureGaugeHMCUpdater::registerParameters(desc);
 	TwoFlavorHMCUpdater::registerParameters(desc);
@@ -260,6 +264,7 @@ void LatticeSweep::printSweepsName() {
 		std::cout << "List of the possible Sweeps name:" << std::endl;
 		std::cout
 		<< "PureGaugeCM" << std::endl
+    << "PureGaugeCMconst" << std::endl
 		<<  "Plaquette" << std::endl
 		<<  "PureGaugeHMC" << std::endl
 		<<  "TwoFlavorQCD" << std::endl
