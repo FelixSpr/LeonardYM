@@ -17,7 +17,7 @@
 
 //#include "actions/GaugeEnergy.h"
 #include "actions/GaugeAction.h"
-
+#include <fstream>
 //added by Felix
 /*
 #include "actions/GaugeEnergy.h"
@@ -76,6 +76,14 @@ int main(int ac, char* av[]) {
 		
 		//Action and dirac operator options
 		("beta", po::value<Update::real_t>(), "set the \\beta parameter of the simulations")
+   
+    ("Emin", po::value<Update::real_t>(), "set the min Energy of LLR")
+    ("Emax", po::value<Update::real_t>(), "set the max Energy of LLR")
+    ("delta", po::value<Update::real_t>(), "set the Energyinterval of LLR")
+    ("ait", po::value<unsigned int>(), "set the number of iterations to find a in LLR")
+    ("Njacknife", po::value<unsigned int>(), "set the number of Jackknife samples for LLR")
+    
+    
 		("kappa", po::value<Update::real_t>(), "set the \\kappa parameter of the simulations")
 		("mass", po::value<Update::real_t>(), "set the mass parameter of the overlap operator")
 		("csw", po::value<Update::real_t>(), "The clover term coefficient")
@@ -312,20 +320,171 @@ int main(int ac, char* av[]) {
 	//Finally create the simulation
 	Update::Simulation simulation(*environment);
 	//Start and run warmup
-	simulation.starter();
-	simulation.warmUp();
+	simulation.starterLLR(-660.0);
+	simulation.warmUpLLR(1.0,-660.0);
 	//Perform the measurements
-	simulation.measurement();
-  Update::GaugeAction* gaugeActionEfind = Update::GaugeAction::getInstance("StandardWilson",5.6);
-	Update::long_real_t energyEfind = gaugeActionEfind->energy(*environment);
-  double energyout = energyEfind;
-  std::cout << "Gaugeaction " << energyout << std::endl;
-	//Print and finalize the output to file
-	output->print();
+	simulation.measurementLLR(1.0,-660.0);
+   
+  //double betaread = environment->configurations.get<std::string>("beta");
+  std::cout << "See if this works: " << environment->configurations.get<Update::real_t>("delta") << std::endl;
+  output->print();
 	output->destroy();
 
 	//destroy the environment
 	delete environment;
+  
+  environment = new Update::environment_t(vm);
+  
+  double Emax = environment->configurations.get<Update::real_t>("Emax");
+  double Emin = environment->configurations.get<Update::real_t>("Emin");
+  double delta = environment->configurations.get<Update::real_t>("delta");
+  int ait = environment->configurations.get<unsigned int>("ait");
+  int Njacknife = environment->configurations.get<unsigned int>("Njacknife");
+  int trajecs = environment->configurations.get<unsigned int>("number_measurement_sweeps");
+  
+  
+  double x0[(int)((Emax-Emin)/delta)];  //lower end of energy interval
+	double a[(int)((Emax-Emin)/delta)]; 
+	double a_i[Njacknife]; 
+	double a_i_new;
+	int RobMarchcount; //number of iteration of the rob march algorithm
+	double Reweightexpect; //Reweighted expectationvalue of the energy 
+	double meassurement[trajecs]; //smh does not work with meassurement[trajecs]
+	//double varianz;
+  //bool Einterval = false; 
+  
+  //FILE *fpavalue;           
+                  
+  int Eint = 0;
+  int jcount;
+  int acounter;
+  int k;
+  
+  //std::ofstream avaluesoutput ("io_directory/avalues.txt", std::ofstream::out);
+  std::ofstream ofs ("io_directory/avalues.txt", std::ofstream::out);
+
+  
+/*
+  std::ifstream infile("io_directory/energyvalues.txt");
+  k=0;
+  std::string stuff;
+  while (std::getline (infile, stuff)) {
+    // Output the text from the file
+    std::cout << stuff << std::endl;
+    meassurement[k]= std::stod(stuff);
+    std::cout << meassurement[k] << std::endl;
+    k = k + 1;
+  }
+  std:: cout <<"k: "<< k << std::endl;
+  */
+/*
+        while (infile >> stuff)
+        {
+          std::cout <<  stuff << std::endl;
+          //Reweightexpect = Reweightexpect + meassurement[k];
+          k = k+1;
+        }
+        std:: cout <<"k: "<< k << std::endl;
+        */
+  //meassurement = std::malloc(trajecs * sizeof(double));
+  /*
+  for(Eint=0;Eint<=((Emax-Emin)/delta);Eint++)
+  {
+    x0[Eint] = (double)(Eint)*delta + Emin;
+    a[Eint] = 0.0;
+    for(jcount = 0;jcount<Njacknife;jcount++)
+    {
+      a_i[jcount] = 2.0;
+		  a_i_new = 2.0;
+        
+      RobMarchcount = 0;
+      environment = new Update::environment_t(vm);
+      simulation.starterLLR(x0[Eint]);
+      
+      
+      for(acounter=0;acounter<ait;acounter++)
+      {
+        a_i[jcount] = a_i_new;
+        
+        
+        
+        simulation.warmUpLLR(1.0,x0[Eint]);
+          
+        Reweightexpect=0;
+				//varianz=0;
+        
+        simulation.measurementLLR(a_i[jcount],x0[Eint]);
+        
+        
+        std::ifstream infile("io_directory/energyvalues.txt");
+        k=0;
+        std::string stuff;
+        while (std::getline (infile, stuff)) {
+        
+        std::cout << stuff << std::endl;
+        meassurement[k]= std::stod(stuff);
+        Reweightexpect = Reweightexpect + meassurement[k];
+        std::cout << meassurement[k] << std::endl;
+        k = k + 1;
+        }
+        std:: cout <<"k: "<< k << std::endl;
+        
+        
+        //for(k = 0;k<trajecs;k++)
+				//{
+          
+					//meassurement[k] = action();
+          //node0_printf("action = %.4g off \n", meassurement[k]);
+					//Reweightexpect = Reweightexpect + meassurement[k];
+          //updateconst_e(x0[Eint],delta,a_i[jcount]);
+				//}
+        Reweightexpect = Reweightexpect/trajecs;
+        
+        
+        Reweightexpect = Reweightexpect - x0[Eint] - 0.5*delta;
+        
+        //node0_printf("Reweightexpect = %.4g off \n", Reweightexpect);
+        
+        if(RobMarchcount<80)
+				{
+					a_i_new = a_i[jcount] + 12/(delta*delta)*Reweightexpect;
+           //node0_printf("a = %.4g off \n", a_i_new);
+           //avaluesoutput << "a = " << a_i_new << " off \n";
+           ofs << a_i_new << " \n";
+           std::cout << "a = " << a_i_new << " off" <<std::endl;
+				}
+				else
+				{
+					a_i_new = a_i[jcount] + 12/(delta*delta*(RobMarchcount+1-80))*Reweightexpect;
+           //node0_printf("a = %.4g \n", a_i_new);
+           //avaluesoutput << "a = " << a_i_new << " \n";
+           ofs << a_i_new << " \n";
+           std::cout << "a = " << a_i_new <<std::endl;
+				}
+        RobMarchcount = RobMarchcount + 1;
+        std::cout << "RobMarchcount: " << RobMarchcount << std::endl;
+        
+      }
+      
+      a[Eint] = a[Eint]+a_i_new/Njacknife;
+      
+    }
+    //node0_printf("a = %.4g \n", a[Eint]);
+    //printf("%d \n",1.0);
+    //fprintf(fpavalue,"Enter a sentence:\n");
+    //fprintf(fpavalue, "%d \n",1.0);
+  }
+  //avaluesoutput.close();
+  ofs.close();
+  */
+ /*
+  Update::GaugeAction* gaugeActionEfind = Update::GaugeAction::getInstance("StandardWilson",5.6);
+	Update::long_real_t energyEfind = gaugeActionEfind->energy(*environment);
+  double energyout = energyEfind;
+  std::cout << "Gaugeaction " << energyEfind << std::endl;
+  */
+	//Print and finalize the output to file
+	
 
 #ifdef ENABLE_MPI
 	Lattice::MpiLayout<Lattice::ExtendedStencil>::destroy();
@@ -338,52 +497,3 @@ int main(int ac, char* av[]) {
 	return 0;
 }
 
-/*
-void findEintsmooth(double Eint, double delta) {
-  bool Efound = false;
-  double energy;
-  double energyref;
-  double betaEfind = environment.configurations.get<double>("beta");
-  double betaref = environment.configurations.get<double>("beta");
-  GaugeAction* gaugeActionEfind = GaugeAction::getInstance("StandardWilson",betaEfind);
-	long_real_t energyEfind = gaugeActionEfind->energy(environment);
-  int counter = 0;
-  std::cout << "GaugeEnergy::Energy value " << energyEfind << std::endl;
-  if(energyEfind>=Eint && energyEfind <= (Eint+delta))
-  {
-    Efound = true;
-    betaEfind = betaref;
-  }
-  
-  while(Efound == false && counter<400)
-  {
-    update();
-    //energy = action();
-    energyref = actionref(betaref);
-    //node0_printf("energy %.8g %.8g %.8g\n",
-      //           energyref, beta, counter);
-    //node0_printf("Eint = %.4g \n", Eint);
-    //node0_printf("energy %.8g %.8g %.8g\n", energy, Eint, counter);
-    //node0_printf("energyref %.8g %.8g %.8g\n", energyref, beta, counter);
-    if(energyref>=Eint && energyref <= (Eint+delta))
-    {
-      Efound = true;
-      beta = betaref;
-      node0_printf("energyref %.8g %.8g %d\n", energyref, beta, counter);
-    }
-    else if(energyref>(Eint+delta))
-    {
-      beta = beta+0.1;
-      node0_printf("Beta and counter %.8g %.8g \n",  beta, counter*1.0);
-    }
-    else if(energyref<=(Eint+delta))
-    {
-      beta = beta-0.1;
-      node0_printf("Beta and counter %.8g %.8g \n",  beta, counter*1.0);
-    }
-    counter = counter +1;
-  }
-  node0_printf("counter = %.8g \n", counter*1.0);
-  beta = betaref;
-}
-*/

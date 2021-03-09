@@ -43,6 +43,8 @@
 #include "hmc_updaters/HiggsGaugeHMCUpdater.h"
 #include "utils/RandomGaugeTransformation.h"
 
+#include "pure_gauge/findEsmooth.h"
+
 namespace Update {
 
 LatticeSweep::LatticeSweep() { }
@@ -154,6 +156,8 @@ void LatticeSweep::call(environment_t& environment) {
 		}
 	}
 }
+
+
 
 LatticeSweep* LatticeSweep::read(const std::string& toRead) {
 	std::string::const_iterator index = toRead.begin();

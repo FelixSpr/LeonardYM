@@ -17,6 +17,7 @@ public:
 	 * This function perform a pure gauge update on the whole (fundamental) lattice, using the standard Wilson action
 	 */
 	void execute(environment_t& environment);
+  void executebeta(environment_t & environment,real_t beta);
 
 public:
 	void updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta);

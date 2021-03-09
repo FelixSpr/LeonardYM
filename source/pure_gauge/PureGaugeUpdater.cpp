@@ -54,7 +54,8 @@ void PureGaugeUpdater::execute(environment_t & environment) {
 	//Get the gauge action
 	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),environment.configurations.get<real_t>("beta"));
 
-	
+  std::cout << "PureGaugeUpdater did an Update " << std::endl;
+  	
 #ifdef MULTITHREADING
 	Checkerboard* checkerboard = Checkerboard::getInstance();
 #endif
@@ -113,6 +114,81 @@ void PureGaugeUpdater::execute(environment_t & environment) {
 	environment.synchronize();
 	delete action;
 }
+
+
+
+void PureGaugeUpdater::executebeta(environment_t & environment,real_t beta) {
+	typedef extended_gauge_lattice_t::Layout Layout;
+  
+	//Get the gauge action
+	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),beta);
+
+	
+#ifdef MULTITHREADING
+	Checkerboard* checkerboard = Checkerboard::getInstance();
+#endif
+
+#ifndef ENABLE_MPI
+#ifdef MULTITHREADING
+	for (int color = 0; color < checkerboard->getNumberLoops(); ++color) {
+#endif
+#pragma omp parallel for
+		for (int site = 0; site < environment.gaugeLinkConfiguration.localsize; ++site) {
+			for (unsigned int mu = 0; mu < 4; ++mu) {
+#ifdef MULTITHREADING
+				if (checkerboard->getColor(site,mu) == color) {
+#endif
+					this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta);
+#ifdef MULTITHREADING
+				}
+#endif
+			}
+		}
+		environment.gaugeLinkConfiguration.updateHalo();
+#ifdef MULTITHREADING
+	}
+#endif
+#endif
+
+	//We suppose that always MPI+MTH
+#ifdef ENABLE_MPI
+	for (int processor = 0; processor < Layout::numberProcessors; ++processor) {
+		for (int color = 0; color < checkerboard->getNumberLoops(); ++color) {
+			if (processor == Layout::this_processor) {
+#pragma omp parallel for
+				for (int site = 0; site < environment.gaugeLinkConfiguration.localsize; ++site) {
+					for (unsigned int mu = 0; mu < 4; ++mu) {
+						if (checkerboard->getColor(site,mu) == color) {
+							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta);
+						}
+					}
+				}
+			}
+			else {
+#pragma omp parallel for 
+				for (int site = environment.gaugeLinkConfiguration.sharedsize; site < environment.gaugeLinkConfiguration.localsize; ++site) {
+					for (unsigned int mu = 0; mu < 4; ++mu) {
+						if (checkerboard->getColor(site,mu) == color) {
+							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta);
+						}
+					}
+				}
+			}
+		}
+		environment.gaugeLinkConfiguration.updateHalo();
+	}
+#endif
+
+	environment.synchronize();
+	delete action;
+ 
+ std::cout << "executebeta executed!" << std::endl;
+}
+
+
+
+
+
 
 #ifdef MULTITHREADING
 real_t PureGaugeUpdater::generate_radius(real_t b) {

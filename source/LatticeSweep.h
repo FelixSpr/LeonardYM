@@ -20,9 +20,11 @@ public:
 
 	//Call the sweep as many times as specified by the configuration script
 	void call(environment_t& environment);
+  
 
 	//virtual method to execute the sweep on the environment
 	virtual void execute(environment_t& environment) = 0;
+  
 
 	//Set the number of calls of the sweep
 	void setNumberTimes(unsigned int _numberTimes);

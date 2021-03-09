@@ -216,6 +216,9 @@
  
 ./build/PureGaugeUpdaterConst.o: ./source/pure_gauge/PureGaugeUpdaterConst.h ./source/pure_gauge/PureGaugeUpdaterConst.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeUpdaterConst.o ./source/pure_gauge/PureGaugeUpdaterConst.cpp
+ 
+./build/findEsmooth.o: ./source/pure_gauge/findEsmooth.h ./source/pure_gauge/findEsmooth.cpp
+	$(CPP) $(CPPFLAGS) -c -o ./build/findEsmooth.o ./source/pure_gauge/findEsmooth.cpp
 
 ./build/PureGaugeOverrelaxation.o: ./source/pure_gauge/PureGaugeOverrelaxation.h ./source/pure_gauge/PureGaugeOverrelaxation.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeOverrelaxation.o ./source/pure_gauge/PureGaugeOverrelaxation.cpp

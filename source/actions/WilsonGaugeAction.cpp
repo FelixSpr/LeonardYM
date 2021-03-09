@@ -42,9 +42,11 @@ long_real_t WilsonGaugeAction::energy(const environment_t& env) {
 				plaqs += env.gaugeLinkConfiguration[LT::sup(site,mu)][nu]*htrans(env.gaugeLinkConfiguration[LT::sup(site,nu)][mu])*htrans(env.gaugeLinkConfiguration[site][nu]);
 			}
 			energy += -(this->getBeta()/numberColors)*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
+      //energy += -(this->getBeta())*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
 		}
 	}
 	reduceAllSum(energy);
+ // std::cout << "Energyout in wilsongauge: " << energy << std::endl;
 	return energy;
 }
 

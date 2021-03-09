@@ -50,9 +50,10 @@ PureGaugeUpdaterConst::~PureGaugeUpdaterConst() { }
 void PureGaugeUpdaterConst::execute(environment_t & environment) {
 	typedef extended_gauge_lattice_t::Layout Layout;
 	real_t beta = environment.configurations.get<real_t>("beta");
-
+  double delta = environment.configurations.get<real_t>("delta");
 	//Get the gauge action
 	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),environment.configurations.get<real_t>("beta"));
+  //GaugeAction* action = GaugeAction::getInstance("StandardWilson",environment.configurations.get<real_t>("beta"));
   double actionE = action->energy(environment);
   //std::cout << "PureGaugeUpdaterConst did an Update " << std::endl;
 	
@@ -70,7 +71,7 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
 #ifdef MULTITHREADING
 				if (checkerboard->getColor(site,mu) == color) {
 #endif
-					this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE);
+					this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE,delta);
           //std::cout << "Always here? " << std::endl;
           //actionE=action->energy(environment);
           //std::cout << "Energy after Update on site and link: " << actionE << std::endl;
@@ -97,7 +98,7 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
 				for (int site = 0; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE);
+							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE,delta);
               std::cout << "Ever here? " << std::endl;
               //actionE=action->energy(environment);
               //std::cout << "Energy after Update on site and link: " << actionE << std::endl;
@@ -112,7 +113,7 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
 				for (int site = environment.gaugeLinkConfiguration.sharedsize; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE);
+							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta, actionE,delta);
               std::cout << "Ever here? " << std::endl;
               //actionE=action->energy(environment);
               //std::cout << "Energy after Update on site and link: " << actionE << std::endl;
@@ -135,11 +136,11 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
 
 
 
-void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta) {
+void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta, double Energylowerend) {
 	typedef extended_gauge_lattice_t::Layout Layout;
-
+  double delta = environment.configurations.get<real_t>("delta");
 	//Get the gauge action
-	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),beta);
+	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),environment.configurations.get<real_t>("beta"));
   double actionE = action->energy(environment);
 	
 #ifdef MULTITHREADING
@@ -156,7 +157,7 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta)
 #ifdef MULTITHREADING
 				if (checkerboard->getColor(site,mu) == color) {
 #endif
-					this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE);
+					this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE,Energylowerend,delta);
 #ifdef MULTITHREADING
 				}
 #endif
@@ -177,7 +178,7 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta)
 				for (int site = 0; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE);
+							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE,Energylowerend,delta);
 						}
 					}
 				}
@@ -187,7 +188,7 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta)
 				for (int site = environment.gaugeLinkConfiguration.sharedsize; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLink(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE);
+							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE,Energylowerend,delta);
 						}
 					}
 				}
@@ -257,11 +258,11 @@ void PureGaugeUpdaterConst::generate_vector(real_t radius, real_t& u1, real_t& u
 #endif
 
 
-void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta, double& actionE) {
+void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta, double& actionE, double delta) {
 	GaugeGroup staple = action->staple(lattice, site, mu);
   
   double Energy = -3000.00;//-65000.0;
-  double delta =   2000.0;
+  
   
   //std::cout << "Energy: " << actionE << " lower border: " << Energy << " higher border: " << Energy+delta << std::endl;
   
@@ -269,12 +270,14 @@ void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int si
 	//take the plaquette
 	GaugeGroup plaquette = lattice[site][mu]*(staple);
   GaugeGroup trialm = lattice[site][mu];
-  //double actionE = action->energy(environment);
+  GaugeGroup plaquettetrial = lattice[site][mu]*(staple);
   double difference;
-  double differencesum;
+  //double actionE = action->energy(environment);
+  //double differencesum;
 	for (unsigned int k = 0; k < numberColors-1; ++k) {
 		for (int l = k+1; l < numberColors; ++l) {
 			//Take the su2 subgroup matrix for the Cabibbo Marinari update
+      
 			real_t aeff = (imag(plaquette.at(k,k))-imag(plaquette.at(l,l)))/2.;
 			real_t beff = (imag(plaquette.at(k,l))+imag(plaquette.at(l,k)))/2.;
 			real_t ceff = (real(plaquette.at(k,l))-real(plaquette.at(l,k)))/2.;
@@ -299,8 +302,8 @@ void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int si
 			//extract the su2 update matrix, compute also one overrelaxation step
 			subupdate = htrans(substaple)*htrans((subupdate)*(htrans(substaple)))*htrans(substaple)/pow(detStaple,3./2.);
 			//Update the plaquette and the link
-      //std::complex<real_t> tmp3;
-      //std::complex<real_t> tmp4;
+      std::complex<real_t> tmp3;
+      std::complex<real_t> tmp4;
 			for (int i = 0; i < numberColors; ++i) {
 				std::complex<real_t> tmp1 = subupdate.at(0,0)*lattice[site][mu].at(k,i) + subupdate.at(0,1)*lattice[site][mu].at(l,i);
 				std::complex<real_t> tmp2 = subupdate.at(1,0)*lattice[site][mu].at(k,i) + subupdate.at(1,1)*lattice[site][mu].at(l,i);
@@ -310,16 +313,16 @@ void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int si
 				//lattice[site][mu].at(l,i) = tmp2;
         trialm.at(k,i) = tmp1;
 				trialm.at(l,i) = tmp2;
-				//tmp3 = subupdate.at(0,0)*plaquette.at(k,i) + subupdate.at(0,1)*plaquette.at(l,i);
-				//tmp4 = subupdate.at(1,0)*plaquette.at(k,i) + subupdate.at(1,1)*plaquette.at(l,i);
+				tmp3 = subupdate.at(0,0)*plaquette.at(k,i) + subupdate.at(0,1)*plaquette.at(l,i);
+				tmp4 = subupdate.at(1,0)*plaquette.at(k,i) + subupdate.at(1,1)*plaquette.at(l,i);
         //std::complex<real_t> save3 = plaquette.at(k,i);
         //std::complex<real_t> save4 = plaquette.at(l,i);
-				//plaquette.at(k,i) = tmp3;
-				//plaquette.at(l,i) = tmp4;
-        difference = action->deltaAction(lattice, trialm, staple, site, mu);
+				plaquettetrial.at(k,i) = tmp3;
+				plaquettetrial.at(l,i) = tmp4;
+        //difference = action->deltaAction(lattice, trialm, staple, site, mu);
     
 			}
-      
+      /*
       if ((actionE+difference) <= (Energy+delta) && (actionE+difference)>Energy)
       {
         actionE = actionE+difference;
@@ -346,9 +349,214 @@ void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int si
         }
         
       }
-      
+      */
 		}
+   
 	}
+ 
+  difference = action->deltaAction(lattice, trialm, staple, site, mu);
+  if ((actionE+difference) <= (Energy+delta) && (actionE+difference)>Energy)
+  {
+    actionE = actionE+difference;
+    //std::cout << "accepted Link Update"<<  std::endl;
+    
+    for (unsigned int k = 0; k < numberColors-1; ++k) {
+      for (int l = k+1; l < numberColors; ++l) {
+        for (int i = 0; i < numberColors; ++i) {
+          
+          
+          lattice[site][mu].at(k,i) = trialm.at(k,i);
+ 	        lattice[site][mu].at(l,i) = trialm.at(l,i);  
+                                      
+ 	        plaquette.at(k,i) = plaquettetrial.at(k,i);
+ 	        plaquette.at(l,i) = plaquettetrial.at(l,i);
+          
+        
+        }
+      }
+    }
+  }
+      
+  else
+  {
+    //std::cout << "rejected Link Update " << std::endl;
+    for (unsigned int k = 0; k < numberColors-1; ++k) {
+      for (int l = k+1; l < numberColors; ++l) {
+        for (int i = 0; i < numberColors; ++i) {      
+          trialm.at(k,i)=lattice[site][mu].at(k,i);
+		      trialm.at(l,i)=lattice[site][mu].at(l,i);
+          
+          plaquettetrial.at(k,i) = plaquette.at(k,i);
+ 	        plaquettetrial.at(l,i) = plaquette.at(l,i); 
+        }
+      }
+    }
+  } 
+   
+   
+   
+   
+#endif
+#if NUMCOLORS == 2
+	//compute the parameters for the kennedy algorithm
+	real_t detStaple = abs(det(staple));
+	real_t b = 1./(beta*sqrt(detStaple));
+	real_t u0, u1, u2, u3;
+	u0 = generate_radius(b);
+	generate_vector(sqrt(1.-u0*u0), u1, u2, u3);
+	//update the matrix
+	lattice[site][mu].at(0,0) = std::complex<real_t>(u0, u3);
+	lattice[site][mu].at(0,1) = std::complex<real_t>(u2, u1);
+	lattice[site][mu].at(1,0) = std::complex<real_t>(-u2, u1);
+	lattice[site][mu].at(1,1) = std::complex<real_t>(u0, -u3);
+	//redefine the matrix U_New = R S^\dag, normalize the determinant
+	lattice[site][mu] = (lattice[site][mu])*(htrans(staple))/sqrt(detStaple);
+	//perform a single overrelaxation step
+	lattice[site][mu] = (htrans(staple)*htrans(lattice[site][mu])*htrans(staple))/detStaple;
+#endif
+ // std::cout << "Energy after Update: " << actionE << std::endl;
+}
+
+
+
+void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta, double& actionE, double Energy, double delta) {
+	GaugeGroup staple = action->staple(lattice, site, mu);
+  
+  //double Energy = -3000.00;//-65000.0;
+  
+  
+  //std::cout << "Energy: " << actionE << " lower border: " << Energy << " higher border: " << Energy+delta << std::endl;
+  
+#if NUMCOLORS > 2
+	//take the plaquette
+	GaugeGroup plaquette = lattice[site][mu]*(staple);
+  GaugeGroup trialm = lattice[site][mu];
+  GaugeGroup plaquettetrial = lattice[site][mu]*(staple);
+  double difference;
+  //double actionE = action->energy(environment);
+  //double differencesum;
+	for (unsigned int k = 0; k < numberColors-1; ++k) {
+		for (int l = k+1; l < numberColors; ++l) {
+			//Take the su2 subgroup matrix for the Cabibbo Marinari update
+      
+			real_t aeff = (imag(plaquette.at(k,k))-imag(plaquette.at(l,l)))/2.;
+			real_t beff = (imag(plaquette.at(k,l))+imag(plaquette.at(l,k)))/2.;
+			real_t ceff = (real(plaquette.at(k,l))-real(plaquette.at(l,k)))/2.;
+			real_t deff = (real(plaquette.at(k,k))+real(plaquette.at(l,l)))/2.;
+			real_t detStaple = aeff*aeff + beff*beff + ceff*ceff + deff*deff;
+			real_t b = numberColors/(2.*beta*sqrt(detStaple));
+			//Use the standard Kennedy-Pendleton algorithm for su2
+			real_t u0, u1, u2, u3;
+			u0 = generate_radius(b);
+			generate_vector(sqrt(1.-u0*u0), u1, u2, u3);
+			//Calculate the su2 update matrix
+			matrix2x2_t subupdate;
+			subupdate.at(0,0) = std::complex<real_t>(u0, u3);
+			subupdate.at(0,1) = std::complex<real_t>(u2, u1);
+			subupdate.at(1,0) = std::complex<real_t>(-u2, u1);
+			subupdate.at(1,1) = std::complex<real_t>(u0, -u3);
+			matrix2x2_t substaple;
+			substaple.at(0,0) = std::complex<real_t>(deff, aeff);
+			substaple.at(0,1) = std::complex<real_t>(ceff, beff);
+			substaple.at(1,0) = std::complex<real_t>(-ceff, beff);
+			substaple.at(1,1) = std::complex<real_t>(deff, -aeff);
+			//extract the su2 update matrix, compute also one overrelaxation step
+			subupdate = htrans(substaple)*htrans((subupdate)*(htrans(substaple)))*htrans(substaple)/pow(detStaple,3./2.);
+			//Update the plaquette and the link
+      std::complex<real_t> tmp3;
+      std::complex<real_t> tmp4;
+			for (int i = 0; i < numberColors; ++i) {
+				std::complex<real_t> tmp1 = subupdate.at(0,0)*lattice[site][mu].at(k,i) + subupdate.at(0,1)*lattice[site][mu].at(l,i);
+				std::complex<real_t> tmp2 = subupdate.at(1,0)*lattice[site][mu].at(k,i) + subupdate.at(1,1)*lattice[site][mu].at(l,i);
+        //std::complex<real_t> save1 = lattice[site][mu].at(k,i);
+        //std::complex<real_t> save2 = lattice[site][mu].at(l,i);
+				//lattice[site][mu].at(k,i) = tmp1;
+				//lattice[site][mu].at(l,i) = tmp2;
+        trialm.at(k,i) = tmp1;
+				trialm.at(l,i) = tmp2;
+				tmp3 = subupdate.at(0,0)*plaquette.at(k,i) + subupdate.at(0,1)*plaquette.at(l,i);
+				tmp4 = subupdate.at(1,0)*plaquette.at(k,i) + subupdate.at(1,1)*plaquette.at(l,i);
+        //std::complex<real_t> save3 = plaquette.at(k,i);
+        //std::complex<real_t> save4 = plaquette.at(l,i);
+				plaquettetrial.at(k,i) = tmp3;
+				plaquettetrial.at(l,i) = tmp4;
+        //difference = action->deltaAction(lattice, trialm, staple, site, mu);
+    
+			}
+      /*
+      if ((actionE+difference) <= (Energy+delta) && (actionE+difference)>Energy)
+      {
+        actionE = actionE+difference;
+        //std::cout << "accepted Link Update"<<  std::endl;
+        for (int i = 0; i < numberColors; ++i) {
+          lattice[site][mu].at(k,i) = trialm.at(k,i);
+				  lattice[site][mu].at(l,i) = trialm.at(l,i);  
+                                      
+          std::complex<real_t> tmp3 = subupdate.at(0,0)*plaquette.at(k,i) + subupdate.at(0,1)*plaquette.at(l,i);
+				  std::complex<real_t> tmp4 = subupdate.at(1,0)*plaquette.at(k,i) + subupdate.at(1,1)*plaquette.at(l,i);
+				  plaquette.at(k,i) = tmp3;
+				  plaquette.at(l,i) = tmp4;
+        }
+        
+      }
+      
+      else
+      {
+        //std::cout << "rejected Link Update " << std::endl;
+        for (int i = 0; i < numberColors; ++i) {
+          trialm.at(k,i)=lattice[site][mu].at(k,i);
+			    trialm.at(l,i)=lattice[site][mu].at(l,i);  
+          
+        }
+        
+      }
+      */
+		}
+   
+	}
+ 
+  difference = action->deltaAction(lattice, trialm, staple, site, mu);
+  if ((actionE+difference) <= (Energy+delta) && (actionE+difference)>Energy)
+  {
+    actionE = actionE+difference;
+    //std::cout << "accepted Link Update"<<  std::endl;
+    
+    for (unsigned int k = 0; k < numberColors-1; ++k) {
+      for (int l = k+1; l < numberColors; ++l) {
+        for (int i = 0; i < numberColors; ++i) {
+          
+          
+          lattice[site][mu].at(k,i) = trialm.at(k,i);
+ 	        lattice[site][mu].at(l,i) = trialm.at(l,i);  
+                                      
+ 	        plaquette.at(k,i) = plaquettetrial.at(k,i);
+ 	        plaquette.at(l,i) = plaquettetrial.at(l,i);
+          
+        
+        }
+      }
+    }
+  }
+      
+  else
+  {
+    //std::cout << "rejected Link Update " << std::endl;
+    for (unsigned int k = 0; k < numberColors-1; ++k) {
+      for (int l = k+1; l < numberColors; ++l) {
+        for (int i = 0; i < numberColors; ++i) {      
+          trialm.at(k,i)=lattice[site][mu].at(k,i);
+		      trialm.at(l,i)=lattice[site][mu].at(l,i);
+          
+          plaquettetrial.at(k,i) = plaquette.at(k,i);
+ 	        plaquettetrial.at(l,i) = plaquette.at(l,i); 
+        }
+      }
+    }
+  } 
+   
+   
+   
+   
 #endif
 #if NUMCOLORS == 2
 	//compute the parameters for the kennedy algorithm

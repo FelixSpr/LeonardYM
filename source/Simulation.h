@@ -4,6 +4,10 @@
 #include "LatticeSweep.h"
 #include <list>
 
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+
 namespace Update {
 
 class Simulation {
@@ -14,12 +18,15 @@ public:
 
 	//This function set the lattice, the environment and all other factors for the simulation
 	void starter();
+  void starterLLR(double Eint);
 
 	//Execute the warm-up sweeps to thermalize the lattice
 	void warmUp();
+  void warmUpLLR(double a, double Energylowerend);
 
 	//Run the main measurement-update sweeps
 	void measurement();
+  void measurementLLR(double a, double Energylowerend);
 
 private:
 	std::list<LatticeSweep*> listWarmUpSweeps;

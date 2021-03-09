@@ -20,11 +20,11 @@ public:
 	 * This function perform a pure gauge update on the whole (fundamental) lattice, using the standard Wilson action
 	 */
 	void execute(environment_t& environment);
-  void executebeta(environment_t & environment,real_t beta);
+  void executebeta(environment_t & environment,real_t beta, double Energylowerend);
 
 public:
-	void updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta,  double& actionE);
-
+	void updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta,  double& actionE, double delta); 
+  void updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double beta,  double& actionE, double Energy, double delta);
 private:
 #ifdef MULTITHREADING
 	//The generator of random numbers
