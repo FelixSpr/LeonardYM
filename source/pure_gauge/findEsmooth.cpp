@@ -43,21 +43,22 @@ void findEsmooth::execute(environment_t & environment, double Eint) {
     {
       Efound = true;
       //beta = betaref;
-      std::cout << "Beta: " << betaEfind << " Counter: " << counter << std::endl;
+      std::cout << "Beta: " << betaEfind << " Counter: " << counter << "Energy: " << energyEfind << std::endl;
     }
     else if(energyEfind>(Energytarget+delta))
     {
       betaEfind = betaEfind+0.1;
-      std::cout << "Beta: " << betaEfind << " Counter: " << counter << std::endl;
+      std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
     }
     else if(energyEfind<=(Energytarget+delta))
     {
       betaEfind = betaEfind-0.1;
-      std::cout << "Beta: " << betaEfind << " Counter: " << counter << std::endl;
+      std::cout << "Beta: " << betaEfind << " Counter: " << counter << "Energy: " << energyEfind << std::endl;
     }
     counter = counter +1;
   }
-  std::cout << "Counter at the end: " << counter << std::endl; 
+  std::cout << "Counter at the end: " << counter << std::endl;
+  std::cout << "Energy at the end: " << energyEfind << std::endl;
   
   
 }

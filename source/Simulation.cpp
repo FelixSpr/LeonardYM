@@ -6,7 +6,8 @@
 #include "actions/GaugeAction.h"
 #include "pure_gauge/findEsmooth.h"
 #include "pure_gauge/PureGaugeUpdaterConst.h"
-#include "pure_gauge/PureGaugeOverrelaxation.h"
+#include "pure_gauge/PureGaugeOverrelaxationConst.h"
+#include "wilson_loops/Plaquette.h"
 
 #include <iostream>
 #include <iomanip>
@@ -76,6 +77,8 @@ void Simulation::warmUp() {
 void Simulation::warmUpLLR(double a, double Energylowerend) {
 	if (isOutputProcess()) std::cout << "Loading the warm-up sweeps ..." << std::endl;
   PureGaugeUpdaterConst* update = new PureGaugeUpdaterConst();
+  //PureGaugeUpdater* update = new PureGaugeUpdater();
+  PureGaugeOverrelaxationConst* updateover = new PureGaugeOverrelaxationConst();
   GaugeAction* gaugeActionEoutput = GaugeAction::getInstance("StandardWilson",environment.configurations.get<real_t>("beta"));
 	std::vector<std::string> warmUpParameters = environment.configurations.get< std::vector< std::string > >("warm_up_sweeps");
 	std::vector<std::string>::iterator i;
@@ -101,6 +104,8 @@ void Simulation::warmUpLLR(double a, double Energylowerend) {
 		timersub(&stop,&start,&result);
 	//	if (isOutputProcess()) std::cout << "Sweep cicle " << i << " done in: " << (double)result.tv_sec + result.tv_usec/1000000.0 << " sec" << std::endl;
     update->executebeta(environment,a*environment.configurations.get<real_t>("beta"),Energylowerend);
+    //update->executebeta(environment,a*environment.configurations.get<real_t>("beta"));
+    //updateover->executebeta(environment,Energylowerend);
 		++environment.sweep;
 	}
 }
@@ -144,7 +149,8 @@ void Simulation::measurement() {
 
 void Simulation::measurementLLR(double a, double Energylowerend) {
   std::ofstream ofs ("io_directory/energyvalues.txt", std::ofstream::out);
-
+  std::ofstream ofsplaq;
+  ofsplaq.open("io_directory/plaquvalues.txt", std::ios::app);
   //ofs << "lorem ipsum";
 
   //ofs.close();
@@ -152,8 +158,10 @@ void Simulation::measurementLLR(double a, double Energylowerend) {
   //std::ofstream myfileenergyvalues;
   //myfileenergyvalues.open("energyvalues.txt");
   PureGaugeUpdaterConst* update = new PureGaugeUpdaterConst();
-  PureGaugeOverrelaxation* updateover=new PureGaugeOverrelaxation();
+  //PureGaugeUpdater* update = new PureGaugeUpdater();
+  PureGaugeOverrelaxationConst* updateover = new PureGaugeOverrelaxationConst();
   GaugeAction* gaugeActionEoutput = GaugeAction::getInstance("StandardWilson",environment.configurations.get<real_t>("beta"));
+  Plaquette* plaq = new Plaquette();
 	//long_real_t energyEoutput = gaugeActionEoutput->energy(environment);
 	//myfileenergyvalues.open("energyvalues.txt");
 	std::vector<std::string> measurementParameters = environment.configurations.get< std::vector< std::string > >("measurement_sweeps");
@@ -187,14 +195,22 @@ void Simulation::measurementLLR(double a, double Energylowerend) {
     
     //myfileenergyvalues << "random stuff \n"; //<< gaugeActionEoutput->energy(environment) << " \n";
     update->executebeta(environment,a*environment.configurations.get<real_t>("beta"),Energylowerend);
+    //update->executebeta(environment,a*environment.configurations.get<real_t>("beta"));
     std::cout << "Energy after Heatbathconst: " << gaugeActionEoutput->energy(environment) << " \n";
-    updateover->execute(environment);
+    std::cout << "spacial: " << plaq->spacialPlaquette(environment) << " temporal: " << 2.0*(plaq->Plaquettevalue(environment))-(plaq->spacialPlaquette(environment)) << " Plaquette: " << plaq->Plaquettevalue(environment) << " \n";
+    std::cout << "std of Plaquette after Heatbathconst: " << plaq->Plaquettestd(environment,plaq->Plaquettevalue(environment)) << " \n";
+    updateover->executebeta(environment,Energylowerend);
     std::cout << "Energy after Overrelax: " << gaugeActionEoutput->energy(environment) << " \n";
+    std::cout << "Plaquette after Overrelax: " << plaq->Plaquettevalue(environment) << " \n";
+    std::cout << "std of Plaquette after Overrelax: " << plaq->Plaquettestd(environment,plaq->Plaquettevalue(environment)) << " \n";
     ofs << gaugeActionEoutput->energy(environment) << " \n";
+    ofsplaq << "Avg Plaqu: " << plaq->Plaquettevalue(environment) << " \n";
+    ofsplaq << "Spacial Plaqu: " << plaq->spacialPlaquette(environment) << " \n";
 		++environment.sweep;
 	}
   //myfileenergyvalues.close();
   ofs.close();
+  ofsplaq.close();
   //GaugeAction* gaugeActionEfind = GaugeAction::getInstance("StandardWilson",5.6);
 	//long_real_t energyEfind = gaugeActionEfind->energy(environment);
   //double energyout = energyEfind;

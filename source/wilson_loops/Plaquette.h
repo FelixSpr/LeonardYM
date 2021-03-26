@@ -17,8 +17,13 @@ public:
 	 * @param n
 	 */
 	virtual void execute(environment_t& environment);
+ 
+   
 
 	static long_real_t temporalPlaquette(const extended_gauge_lattice_t& gaugeLinkConfiguration);
+  long_real_t spacialPlaquette(environment_t& environment);
+  long_real_t Plaquettevalue(environment_t& environment);
+  long_real_t Plaquettestd(environment_t& environment,double average);
 };
 
 } /* namespace Update */

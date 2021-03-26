@@ -41,8 +41,8 @@ long_real_t WilsonGaugeAction::energy(const environment_t& env) {
 			for (unsigned int nu = mu + 1; nu < 4; ++nu) {
 				plaqs += env.gaugeLinkConfiguration[LT::sup(site,mu)][nu]*htrans(env.gaugeLinkConfiguration[LT::sup(site,nu)][mu])*htrans(env.gaugeLinkConfiguration[site][nu]);
 			}
-			energy += -(this->getBeta()/numberColors)*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
-      //energy += -(this->getBeta())*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
+			//energy += -(this->getBeta()/numberColors)*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
+      energy += -(this->getBeta())*real(trace(env.gaugeLinkConfiguration[site][mu]*plaqs));
 		}
 	}
 	reduceAllSum(energy);
@@ -53,7 +53,8 @@ long_real_t WilsonGaugeAction::energy(const environment_t& env) {
 real_t WilsonGaugeAction::deltaAction(const extended_gauge_lattice_t& lattice, const GaugeGroup& trial, const GaugeGroup& staple, int site, int mu) const {
 	real_t oldAction = (real(trace(lattice[site][mu]*staple)));
 	real_t newAction = (real(trace(trial*staple)));
-	return -this->getBeta()*(newAction-oldAction)/(numberColors);
+	//return -this->getBeta()*(newAction-oldAction)/(numberColors);
+  return -this->getBeta()*(newAction-oldAction);
 }
 
 } /* namespace Update */

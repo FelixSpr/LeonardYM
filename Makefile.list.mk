@@ -222,6 +222,9 @@
 
 ./build/PureGaugeOverrelaxation.o: ./source/pure_gauge/PureGaugeOverrelaxation.h ./source/pure_gauge/PureGaugeOverrelaxation.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeOverrelaxation.o ./source/pure_gauge/PureGaugeOverrelaxation.cpp
+ 
+./build/PureGaugeOverrelaxationConst.o: ./source/pure_gauge/PureGaugeOverrelaxationConst.h ./source/pure_gauge/PureGaugeOverrelaxationConst.cpp
+	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeOverrelaxationConst.o ./source/pure_gauge/PureGaugeOverrelaxationConst.cpp
 
 ./build/PureGaugeHMCUpdater.o: ./source/hmc_updaters/PureGaugeHMCUpdater.h ./source/hmc_updaters/PureGaugeHMCUpdater.cpp
 	$(CPP) $(CPPFLAGS) -c -o ./build/PureGaugeHMCUpdater.o ./source/hmc_updaters/PureGaugeHMCUpdater.cpp

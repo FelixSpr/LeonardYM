@@ -18,6 +18,8 @@
 //#include "actions/GaugeEnergy.h"
 #include "actions/GaugeAction.h"
 #include <fstream>
+#include <iostream>
+#include <iomanip>
 //added by Felix
 /*
 #include "actions/GaugeEnergy.h"
@@ -320,14 +322,14 @@ int main(int ac, char* av[]) {
 	//Finally create the simulation
 	Update::Simulation simulation(*environment);
 	//Start and run warmup
-	simulation.starterLLR(-660.0);
-	simulation.warmUpLLR(1.0,-660.0);
+	simulation.starterLLR(-2560.0);
+	simulation.warmUpLLR(1.0,-2560.0);
 	//Perform the measurements
-	simulation.measurementLLR(1.0,-660.0);
+	simulation.measurementLLR(1.0,-2560.0);
    
   //double betaread = environment->configurations.get<std::string>("beta");
-  std::cout << "See if this works: " << environment->configurations.get<Update::real_t>("delta") << std::endl;
-  output->print();
+  //std::cout << "See if this works: " << environment->configurations.get<Update::real_t>("delta") << std::endl;
+  //output->print();
 	output->destroy();
 
 	//destroy the environment
@@ -346,7 +348,8 @@ int main(int ac, char* av[]) {
   double x0[(int)((Emax-Emin)/delta)];  //lower end of energy interval
 	double a[(int)((Emax-Emin)/delta)]; 
 	double a_i[Njacknife]; 
-	double a_i_new;
+	//double a_i_new;
+  Update::real_t a_i_new;
 	int RobMarchcount; //number of iteration of the rob march algorithm
 	double Reweightexpect; //Reweighted expectationvalue of the energy 
 	double meassurement[trajecs]; //smh does not work with meassurement[trajecs]
@@ -362,6 +365,8 @@ int main(int ac, char* av[]) {
   
   //std::ofstream avaluesoutput ("io_directory/avalues.txt", std::ofstream::out);
   std::ofstream ofs ("io_directory/avalues.txt", std::ofstream::out);
+  //std::ofstream ofs("avalues.txt", std::ofstream::out);
+  //std::ofstream ofs("avalues.txt");
 
   
 /*
@@ -394,8 +399,8 @@ int main(int ac, char* av[]) {
     a[Eint] = 0.0;
     for(jcount = 0;jcount<Njacknife;jcount++)
     {
-      a_i[jcount] = 2.0;
-		  a_i_new = 2.0;
+      a_i[jcount] = 4.0;
+		  a_i_new = 4.0;
         
       RobMarchcount = 0;
       environment = new Update::environment_t(vm);
@@ -451,6 +456,7 @@ int main(int ac, char* av[]) {
            //node0_printf("a = %.4g off \n", a_i_new);
            //avaluesoutput << "a = " << a_i_new << " off \n";
            ofs << a_i_new << " \n";
+           ofs.flush();
            std::cout << "a = " << a_i_new << " off" <<std::endl;
 				}
 				else
@@ -459,6 +465,7 @@ int main(int ac, char* av[]) {
            //node0_printf("a = %.4g \n", a_i_new);
            //avaluesoutput << "a = " << a_i_new << " \n";
            ofs << a_i_new << " \n";
+           ofs.flush();
            std::cout << "a = " << a_i_new <<std::endl;
 				}
         RobMarchcount = RobMarchcount + 1;
@@ -475,6 +482,7 @@ int main(int ac, char* av[]) {
     //fprintf(fpavalue, "%d \n",1.0);
   }
   //avaluesoutput.close();
+  //ofs.flush();
   ofs.close();
   */
  /*

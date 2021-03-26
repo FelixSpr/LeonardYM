@@ -158,6 +158,7 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta,
 				if (checkerboard->getColor(site,mu) == color) {
 #endif
 					this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, action, beta,actionE,Energylowerend,delta);
+          //std::cout << "Energy after Update on site and link: " << actionE << std::endl;
 #ifdef MULTITHREADING
 				}
 #endif
@@ -218,6 +219,7 @@ real_t PureGaugeUpdaterConst::generate_radius(real_t b) {
 		x3 = pow(cos(2.*PI*(*randomUniform[omp_get_thread_num()])()), 2.);
 		s = 1. + b*(x1+x2*x3);
 		r = (*randomUniform[omp_get_thread_num()])();
+    //std::cout << "b = " << b << ", x1 = " << x1 << ", x2 = " << x2 << ", x3 = " << x3 << ", s = " << s << ", r = " << r << " --> " << (1.+s-2.*r*r) << std::endl;
 	}
 	return s;
 }
@@ -268,9 +270,11 @@ void PureGaugeUpdaterConst::updateLink(extended_gauge_lattice_t& lattice, int si
   
 #if NUMCOLORS > 2
 	//take the plaquette
+  
 	GaugeGroup plaquette = lattice[site][mu]*(staple);
   GaugeGroup trialm = lattice[site][mu];
   GaugeGroup plaquettetrial = lattice[site][mu]*(staple);
+  
   double difference;
   //double actionE = action->energy(environment);
   //double differencesum;
@@ -428,13 +432,16 @@ void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, in
   //std::cout << "Energy: " << actionE << " lower border: " << Energy << " higher border: " << Energy+delta << std::endl;
   
 #if NUMCOLORS > 2
+  //std::cout << "calc plaquette and staple"<< std::endl;
 	//take the plaquette
 	GaugeGroup plaquette = lattice[site][mu]*(staple);
   GaugeGroup trialm = lattice[site][mu];
+  GaugeGroup latticeold = lattice[site][mu];
   GaugeGroup plaquettetrial = lattice[site][mu]*(staple);
   double difference;
   //double actionE = action->energy(environment);
   //double differencesum;
+  //std::cout << "calc subupdate"<< std::endl;
 	for (unsigned int k = 0; k < numberColors-1; ++k) {
 		for (int l = k+1; l < numberColors; ++l) {
 			//Take the su2 subgroup matrix for the Cabibbo Marinari update
@@ -447,7 +454,9 @@ void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, in
 			real_t b = numberColors/(2.*beta*sqrt(detStaple));
 			//Use the standard Kennedy-Pendleton algorithm for su2
 			real_t u0, u1, u2, u3;
+      //std::cout << "generate radius" << std::endl;
 			u0 = generate_radius(b);
+      //std::cout << "generate vector" << std::endl;
 			generate_vector(sqrt(1.-u0*u0), u1, u2, u3);
 			//Calculate the su2 update matrix
 			matrix2x2_t subupdate;
@@ -466,8 +475,10 @@ void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, in
       std::complex<real_t> tmp3;
       std::complex<real_t> tmp4;
 			for (int i = 0; i < numberColors; ++i) {
-				std::complex<real_t> tmp1 = subupdate.at(0,0)*lattice[site][mu].at(k,i) + subupdate.at(0,1)*lattice[site][mu].at(l,i);
-				std::complex<real_t> tmp2 = subupdate.at(1,0)*lattice[site][mu].at(k,i) + subupdate.at(1,1)*lattice[site][mu].at(l,i);
+				//std::complex<real_t> tmp1 = subupdate.at(0,0)*lattice[site][mu].at(k,i) + subupdate.at(0,1)*lattice[site][mu].at(l,i);
+				//std::complex<real_t> tmp2 = subupdate.at(1,0)*lattice[site][mu].at(k,i) + subupdate.at(1,1)*lattice[site][mu].at(l,i);
+        std::complex<real_t> tmp1 = subupdate.at(0,0)*trialm.at(k,i) + subupdate.at(0,1)*trialm.at(l,i);
+				std::complex<real_t> tmp2 = subupdate.at(1,0)*trialm.at(k,i) + subupdate.at(1,1)*trialm.at(l,i);
         //std::complex<real_t> save1 = lattice[site][mu].at(k,i);
         //std::complex<real_t> save2 = lattice[site][mu].at(l,i);
 				//lattice[site][mu].at(k,i) = tmp1;
@@ -480,6 +491,8 @@ void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, in
         //std::complex<real_t> save4 = plaquette.at(l,i);
 				plaquettetrial.at(k,i) = tmp3;
 				plaquettetrial.at(l,i) = tmp4;
+        plaquette.at(k,i) = tmp3;
+				plaquette.at(l,i) = tmp4;
         //difference = action->deltaAction(lattice, trialm, staple, site, mu);
     
 			}
@@ -514,7 +527,7 @@ void PureGaugeUpdaterConst::updateLinkbeta(extended_gauge_lattice_t& lattice, in
 		}
    
 	}
- 
+  //std::cout << "calc difference and change site and plaquette"<< std::endl;
   difference = action->deltaAction(lattice, trialm, staple, site, mu);
   if ((actionE+difference) <= (Energy+delta) && (actionE+difference)>Energy)
   {
