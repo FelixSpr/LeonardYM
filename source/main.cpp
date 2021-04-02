@@ -322,10 +322,10 @@ int main(int ac, char* av[]) {
 	//Finally create the simulation
 	Update::Simulation simulation(*environment);
 	//Start and run warmup
-	simulation.starterLLR(-2560.0);
-	simulation.warmUpLLR(1.0,-2560.0);
+	//simulation.starterLLR(-2560.0);
+	//simulation.warmUpLLR(1.0,-2560.0);
 	//Perform the measurements
-	simulation.measurementLLR(1.0,-2560.0);
+	//simulation.measurementLLR(1.0,-2560.0);
    
   //double betaread = environment->configurations.get<std::string>("beta");
   //std::cout << "See if this works: " << environment->configurations.get<Update::real_t>("delta") << std::endl;
@@ -392,15 +392,15 @@ int main(int ac, char* av[]) {
         std:: cout <<"k: "<< k << std::endl;
         */
   //meassurement = std::malloc(trajecs * sizeof(double));
-  /*
+  
   for(Eint=0;Eint<=((Emax-Emin)/delta);Eint++)
   {
     x0[Eint] = (double)(Eint)*delta + Emin;
     a[Eint] = 0.0;
     for(jcount = 0;jcount<Njacknife;jcount++)
     {
-      a_i[jcount] = 4.0;
-		  a_i_new = 4.0;
+      a_i[jcount] = 7.0;
+		  a_i_new = 7.0;
         
       RobMarchcount = 0;
       environment = new Update::environment_t(vm);
@@ -413,7 +413,7 @@ int main(int ac, char* av[]) {
         
         
         
-        simulation.warmUpLLR(1.0,x0[Eint]);
+        simulation.warmUpLLR(a_i[jcount],x0[Eint]);
           
         Reweightexpect=0;
 				//varianz=0;
@@ -450,7 +450,7 @@ int main(int ac, char* av[]) {
         
         //node0_printf("Reweightexpect = %.4g off \n", Reweightexpect);
         
-        if(RobMarchcount<80)
+        if(RobMarchcount<200)
 				{
 					a_i_new = a_i[jcount] + 12/(delta*delta)*Reweightexpect;
            //node0_printf("a = %.4g off \n", a_i_new);
@@ -461,7 +461,7 @@ int main(int ac, char* av[]) {
 				}
 				else
 				{
-					a_i_new = a_i[jcount] + 12/(delta*delta*(RobMarchcount+1-80))*Reweightexpect;
+					a_i_new = a_i[jcount] + 12/(delta*delta*(RobMarchcount+1-200))*Reweightexpect;
            //node0_printf("a = %.4g \n", a_i_new);
            //avaluesoutput << "a = " << a_i_new << " \n";
            ofs << a_i_new << " \n";
@@ -484,7 +484,7 @@ int main(int ac, char* av[]) {
   //avaluesoutput.close();
   //ofs.flush();
   ofs.close();
-  */
+  
  /*
   Update::GaugeAction* gaugeActionEfind = Update::GaugeAction::getInstance("StandardWilson",5.6);
 	Update::long_real_t energyEfind = gaugeActionEfind->energy(*environment);

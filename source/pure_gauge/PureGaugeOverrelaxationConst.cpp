@@ -63,13 +63,14 @@ PureGaugeOverrelaxationConst::~PureGaugeOverrelaxationConst() {
 #endif
 #endif
 
-void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, double Energylowerend) {
+void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, double Energylowerend, double a) {
 	typedef extended_gauge_lattice_t::Layout Layout;
   double delta = environment.configurations.get<real_t>("delta");
 	//Get the gauge action
 	GaugeAction* gaugeAction = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),environment.configurations.get<real_t>("beta"));
   double actionE = gaugeAction->energy(environment);
-
+  extended_gauge_lattice_t latticesave = environment.gaugeLinkConfiguration;
+  
 #ifdef MULTITHREADING
 	Checkerboard* checkerboard = Checkerboard::getInstance();
 #endif
@@ -84,7 +85,7 @@ void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, doubl
 #ifdef MULTITHREADING
 				if (checkerboard->getColor(site,mu) == color) {
 #endif
-					this->updateLinkbeta(environment.gaugeLinkConfiguration,site,mu,gaugeAction,actionE,Energylowerend,delta);
+					this->updateLinkbeta(environment.gaugeLinkConfiguration,site,mu,gaugeAction,actionE,Energylowerend,delta,a);
 #ifdef MULTITHREADING
 				}
 #endif
@@ -96,6 +97,17 @@ void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, doubl
 #endif
 #endif
 
+if ((gaugeAction->energy(environment)) <= (Energylowerend+delta) && (gaugeAction->energy(environment))>Energylowerend)
+  {
+    std::cout << "accepted Overrelax" << std::endl;
+  }
+  else
+  {
+    environment.gaugeLinkConfiguration = latticesave;
+    std::cout << "rejected Overrelax" << std::endl;
+  }
+
+
 	//We suppose that always MPI+MTH
 #ifdef ENABLE_MPI
 	for (int processor = 0; processor < Layout::numberProcessors; ++processor) {
@@ -105,7 +117,7 @@ void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, doubl
 				for (int site = 0; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, gaugeAction,actionE,Energylowerend,delta);
+							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, gaugeAction,actionE,Energylowerend,delta,a);
 						}
 					}
 				}
@@ -115,7 +127,7 @@ void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, doubl
 				for (int site = environment.gaugeLinkConfiguration.sharedsize; site < environment.gaugeLinkConfiguration.localsize; ++site) {
 					for (unsigned int mu = 0; mu < 4; ++mu) {
 						if (checkerboard->getColor(site,mu) == color) {
-							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, gaugeAction,actionE,Energylowerend,delta);
+							this->updateLinkbeta(environment.gaugeLinkConfiguration, site, mu, gaugeAction,actionE,Energylowerend,delta,a);
 						}
 					}
 				}
@@ -130,7 +142,7 @@ void PureGaugeOverrelaxationConst::executebeta(environment_t& environment, doubl
 
 }
 
-void PureGaugeOverrelaxationConst::updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* gaugeAction, double& actionE, double Energy, double deltaInterval) {
+void PureGaugeOverrelaxationConst::updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* gaugeAction, double& actionE, double Energy, double deltaInterval, double a) {
 #if NUMCOLORS > 2
   //double difference;
 	//take the staple
@@ -150,29 +162,39 @@ void PureGaugeOverrelaxationConst::updateLinkbeta(extended_gauge_lattice_t& latt
   //std::cout << "delta = " << delta << std::endl;
   //difference = action->deltaAction(lattice, trialm, staple, site, mu);
 	//Do the accept/reject metropolis
+ if ((actionE+delta) <= (Energy+deltaInterval) && (actionE+delta)>Energy)
+ {
 	if (delta < 0.) {
     
-    if ((actionE+delta) <= (Energy+deltaInterval) && (actionE+delta)>Energy)
-    {
+    //if ((actionE+delta) <= (Energy+deltaInterval) && (actionE+delta)>Energy)
+    //{
       actionE = actionE+delta;
 		  ++acceptance;
 		  lattice[site][mu] = trial;
-    }
+      //std::cout << "accepted deterministic" << std::endl;
+    //}
 	}
 #ifndef MULTITHREADING
-	else if (randomUniform() < exp(-delta)) {
+	else if (randomUniform() < exp(-a*delta/4.0)) {
 #endif
 #ifdef MULTITHREADING
-	else if ((*randomUniform[omp_get_thread_num()])() < exp(-delta)) {
+	else if ((*randomUniform[omp_get_thread_num()])() < exp(-a*delta/4.0)) {
 #endif
-    if ((actionE+delta) <= (Energy+deltaInterval) && (actionE+delta)>Energy)
-    {
+    //if ((actionE+delta) <= (Energy+deltaInterval) && (actionE+delta)>Energy)
+    //{
       actionE = actionE+delta;
 		  ++acceptance;
 		  lattice[site][mu] = trial;
-    }
+      //std::cout << "accepted random" << std::endl;
+    //}
 	}
-   
+ }
+ /*
+ else
+ {
+   std::cout << "rejected" << std::endl;
+ }
+   */
 	++nsteps;
   //std::cout << "accepted or rejected trial; nr of rate : "<< double(acceptance)/double(nsteps) << std::endl;
   //std::cout << "accepted or rejected trial; nr of rejections : "<< nsteps-acceptance << std::endl;

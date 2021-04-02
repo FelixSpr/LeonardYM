@@ -56,7 +56,6 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
   //GaugeAction* action = GaugeAction::getInstance("StandardWilson",environment.configurations.get<real_t>("beta"));
   double actionE = action->energy(environment);
   //std::cout << "PureGaugeUpdaterConst did an Update " << std::endl;
-	
 #ifdef MULTITHREADING
 	Checkerboard* checkerboard = Checkerboard::getInstance();
 #endif
@@ -88,6 +87,7 @@ void PureGaugeUpdaterConst::execute(environment_t & environment) {
 	}
 #endif
 #endif
+  
 
 	//We suppose that always MPI+MTH
 #ifdef ENABLE_MPI
@@ -142,6 +142,7 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta,
 	//Get the gauge action
 	GaugeAction* action = GaugeAction::getInstance(environment.configurations.get<std::string>("name_action"),environment.configurations.get<real_t>("beta"));
   double actionE = action->energy(environment);
+  extended_gauge_lattice_t latticesave = environment.gaugeLinkConfiguration;
 	
 #ifdef MULTITHREADING
 	Checkerboard* checkerboard = Checkerboard::getInstance();
@@ -169,6 +170,16 @@ void PureGaugeUpdaterConst::executebeta(environment_t & environment,real_t beta,
 	}
 #endif
 #endif
+
+  if ((action->energy(environment)) <= (Energylowerend+delta) && (action->energy(environment))>Energylowerend)
+  {
+    //std::cout << "accepted heatbath" << std::endl;
+  }
+  else
+  {
+    environment.gaugeLinkConfiguration = latticesave;
+    //std::cout << "rejected heatbath" << std::endl;
+  }
 
 	//We suppose that always MPI+MTH
 #ifdef ENABLE_MPI

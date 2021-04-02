@@ -22,9 +22,9 @@ public:
 
 	void updateLink(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action);
    
-	void executebeta(environment_t& environment, double Energylowerend);
+	void executebeta(environment_t& environment, double Energylowerend, double a);
 
-	void updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double& actionE, double Energy, double deltaInterval);
+	void updateLinkbeta(extended_gauge_lattice_t& lattice, int site, int mu, GaugeAction* action, double& actionE, double Energy, double deltaInterval, double a);
 
 private:
 #if NUMCOLORS > 2

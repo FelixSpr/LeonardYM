@@ -105,7 +105,7 @@ void Simulation::warmUpLLR(double a, double Energylowerend) {
 	//	if (isOutputProcess()) std::cout << "Sweep cicle " << i << " done in: " << (double)result.tv_sec + result.tv_usec/1000000.0 << " sec" << std::endl;
     update->executebeta(environment,a*environment.configurations.get<real_t>("beta"),Energylowerend);
     //update->executebeta(environment,a*environment.configurations.get<real_t>("beta"));
-    //updateover->executebeta(environment,Energylowerend);
+    updateover->executebeta(environment,Energylowerend,a);
 		++environment.sweep;
 	}
 }
@@ -199,7 +199,7 @@ void Simulation::measurementLLR(double a, double Energylowerend) {
     std::cout << "Energy after Heatbathconst: " << gaugeActionEoutput->energy(environment) << " \n";
     std::cout << "spacial: " << plaq->spacialPlaquette(environment) << " temporal: " << 2.0*(plaq->Plaquettevalue(environment))-(plaq->spacialPlaquette(environment)) << " Plaquette: " << plaq->Plaquettevalue(environment) << " \n";
     std::cout << "std of Plaquette after Heatbathconst: " << plaq->Plaquettestd(environment,plaq->Plaquettevalue(environment)) << " \n";
-    updateover->executebeta(environment,Energylowerend);
+    updateover->executebeta(environment,Energylowerend,a);
     std::cout << "Energy after Overrelax: " << gaugeActionEoutput->energy(environment) << " \n";
     std::cout << "Plaquette after Overrelax: " << plaq->Plaquettevalue(environment) << " \n";
     std::cout << "std of Plaquette after Overrelax: " << plaq->Plaquettestd(environment,plaq->Plaquettevalue(environment)) << " \n";
