@@ -10,7 +10,11 @@ findEsmooth::findEsmooth() {
 
 void findEsmooth::execute(environment_t & environment, double Eint) {
   
-  
+  int globx = environment.configurations.get<unsigned int>("glob_x");
+  int globy = environment.configurations.get<unsigned int>("glob_y");
+  int globz = environment.configurations.get<unsigned int>("glob_z");
+  int globt = environment.configurations.get<unsigned int>("glob_t");
+  int volume = globx*globy*globz*globy;
   bool Efound = false;
   double Energytarget = Eint;
   double delta = environment.configurations.get<double>("delta");
@@ -47,13 +51,54 @@ void findEsmooth::execute(environment_t & environment, double Eint) {
     }
     else if(energyEfind>(Energytarget+delta))
     {
-      betaEfind = betaEfind+0.1;
-      std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      if(abs(energyEfind-(Energytarget+delta))>volume)
+      {
+        betaEfind = betaEfind+0.1;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      else if (abs(energyEfind-(Energytarget+delta))>(volume/10.0))
+      {
+        betaEfind = betaEfind+0.01;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      else if (abs(energyEfind-(Energytarget+delta))>(volume/100.0))
+      {
+        betaEfind = betaEfind+0.001;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      else
+      {
+        betaEfind = betaEfind+0.0001;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      
+      
     }
-    else if(energyEfind<=(Energytarget+delta))
+    else if(energyEfind<(Energytarget))
     {
-      betaEfind = betaEfind-0.1;
-      std::cout << "Beta: " << betaEfind << " Counter: " << counter << "Energy: " << energyEfind << std::endl;
+      if(abs(energyEfind-Energytarget)>volume)
+      {
+        betaEfind = betaEfind-0.1;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter << "Energy: " << energyEfind << std::endl;
+      }
+      
+      else if(abs(energyEfind-Energytarget)>volume/10.0)
+      {
+        betaEfind = betaEfind-0.01;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter << "Energy: " << energyEfind << std::endl;
+      }
+      else if(abs(energyEfind-Energytarget)>volume/100.0)
+      {
+        betaEfind = betaEfind-0.001;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      else
+      {
+        betaEfind = betaEfind-0.0001;
+        std::cout << "Beta: " << betaEfind << " Counter: " << counter <<  "Energy: " << energyEfind <<std::endl;
+      }
+      
+     
     }
     counter = counter +1;
   }
